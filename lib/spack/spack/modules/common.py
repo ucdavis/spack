@@ -675,12 +675,13 @@ class BaseContext(tengine.Context):
 
         # Project the environment variables from prefix to view if needed
         if view and self.spec in view and not self.conf.hidden:
-            print(f'{self.spec}: project')
+            #print(f'{self.spec}: project')
             spack.user_environment.project_env_mods(
                 *self.spec.traverse(deptype=dt.LINK | dt.RUN), view=view, env=env
             )
         else:
-            print(f'{self.spec}: hidden, do not project')
+            pass
+            #print(f'{self.spec}: hidden, do not project')
 
         # Modifications required from modules.yaml
         env.extend(self.conf.env)
