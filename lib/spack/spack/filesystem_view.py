@@ -710,7 +710,7 @@ class SimpleFilesystemView(FilesystemView):
 
         # Ignore spack meta data folder.
         def skip_list(file):
-            return os.path.basename(file) == spack.store.STORE.layout.metadata_dir
+            return os.path.basename(file) in (spack.store.STORE.layout.metadata_dir, '.cvmfscatalog')
 
         visitor = SourceMergeVisitor(ignore=skip_list)
 
