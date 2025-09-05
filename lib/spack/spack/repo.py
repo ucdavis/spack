@@ -1095,10 +1095,15 @@ class Repo:
         if spec.namespace and spec.namespace != self.namespace:
             raise UnknownPackageError(spec.name, self.namespace)
 
-        package_class = self.get_pkg_class(spec.name)
+        try:
+            package_class = self.get_pkg_class(spec.name)
+        except Exception as e:
+            tty.error(f'Error retrieving package for spec {spec}')
+            raise e
+
         try:
             return package_class(spec)
-        except spack.error.SpackError:
+        except spack.error.SpackError as e:
             # pass these through as their error messages will be fine.
             raise
         except Exception as e:

@@ -529,7 +529,14 @@ class BaseFileLayout:
         # Add optional suffixes based on constraints
         path_elements = [name]
         path_elements.extend(map(self.spec.format, self.conf.suffixes))
-        return "-".join(path_elements)
+        
+        allowed_delimiters = {'%', '+', '-', '~'}
+        for i, element in enumerate(path_elements):
+            if i == 0:
+                continue
+            if element[0] not in allowed_delimiters:
+                path_elements[i] = f'-{element}'
+        return ''.join(path_elements)
 
     @property
     def filename(self):
@@ -772,6 +779,7 @@ class BaseContext(tengine.Context):
 class BaseModuleFileWriter:
     default_template: str
     hide_cmd_format: str
+    version_cmd_format: str
     modulerc_header: List[str]
 
     def __init__(
@@ -918,14 +926,12 @@ class BaseModuleFileWriter:
         self.update_module_hiddenness()
 
     def update_module_defaults(self):
-        if any(self.spec.satisfies(default) for default in self.conf.defaults):
-            # This spec matches a default, it needs to be symlinked to default
-            # Symlink to a tmp location first and move, so that existing
-            # symlinks do not cause an error.
-            default_path = os.path.join(os.path.dirname(self.layout.filename), "default")
-            default_tmp = os.path.join(os.path.dirname(self.layout.filename), ".tmp_spack_default")
-            os.symlink(self.layout.filename, default_tmp)
-            os.rename(default_tmp, default_path)
+        if (not self.conf.hidden) and any(self.spec.satisfies(default) for default in self.conf.defaults):
+            versionrc_path = self.layout.versionrc
+            version_cmd = self.version_cmd_format % os.path.basename(self.layout.use_name)
+            content = self.modulerc_header.copy() + [version_cmd]
+            with open(versionrc_path, "w") as fp:
+                fp.write("\n".join(content))
 
     def update_module_hiddenness(self, remove=False):
         """Update modulerc file corresponding to module to add or remove

@@ -65,6 +65,7 @@ def find_matching_specs(specs, allow_multiple_matches=False):
     # List of specs that match expressions given via command line
     specs_from_cli = []
     has_errors = False
+    unmatched = []
 
     for spec in specs:
         install_query = [InstallStatuses.INSTALLED]
@@ -81,9 +82,13 @@ def find_matching_specs(specs, allow_multiple_matches=False):
 
         # No installed package matches the query
         if len(matching) == 0 and spec is not None:
-            tty.die(f"{spec} does not match any installed packages.")
+            #tty.die(f"{spec} does not match any installed packages.")
+            unmatched.append(str(spec))
+        else:
+            specs_from_cli.extend(matching)
 
-        specs_from_cli.extend(matching)
+    if unmatched:
+        tty.warn("There were unmatched specs: {0}".format(" ".join(unmatched)))
 
     if has_errors:
         tty.die(error_message)

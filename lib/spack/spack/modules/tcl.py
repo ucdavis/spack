@@ -65,6 +65,10 @@ class TclFileLayout(BaseFileLayout):
         """Returns the modulerc file associated with current module file"""
         return os.path.join(os.path.dirname(self.filename), ".modulerc")
 
+    @property
+    def versionrc(self):
+        return os.path.join(os.path.dirname(self.filename), ".version")
+
 
 class TclContext(BaseContext):
     """Context class for tcl module files."""
@@ -83,3 +87,5 @@ class TclModulefileWriter(BaseModuleFileWriter):
     modulerc_header = ["#%Module4.7"]
 
     hide_cmd_format = "module-hide --soft --hidden-loaded %s"
+
+    version_cmd_format = "set ModulesVersion %s"

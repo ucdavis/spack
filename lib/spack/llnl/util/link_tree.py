@@ -440,8 +440,8 @@ class MergeConflictError(Exception):
 
 
 class ConflictingSpecsError(MergeConflictError):
-    def __init__(self, spec_1, spec_2):
-        super().__init__(spec_1, spec_2)
+    def __init__(self, spec_1, spec_2, projection=None):
+        super().__init__(spec_1, spec_2, projection=projection)
 
 
 class SingleMergeConflictError(MergeConflictError):

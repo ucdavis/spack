@@ -694,7 +694,7 @@ class SimpleFilesystemView(FilesystemView):
             metadata_dir = self.relative_metadata_dir_for_spec(current_spec)
             conflicting_spec = seen.get(metadata_dir)
             if conflicting_spec:
-                raise ConflictingSpecsError(current_spec, conflicting_spec)
+                raise ConflictingSpecsError(current_spec, conflicting_spec, projection=metadata_dir)
             seen[metadata_dir] = current_spec
 
     def add_specs(self, *specs: spack.spec.Spec) -> None:
