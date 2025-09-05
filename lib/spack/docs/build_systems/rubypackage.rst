@@ -1,13 +1,16 @@
-.. Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-   Spack Project Developers. See the top-level COPYRIGHT file for details.
+.. Copyright Spack Project Developers. See COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+.. meta::
+   :description lang=en:
+      Discover the Ruby build system in Spack for installing Ruby gems, with support for gemspec, Rakefile, and pre-packaged .gem files.
+
 .. _rubypackage:
 
-----
+------
 Ruby
-----
+------
 
 Like Perl, Python, and R, Ruby has its own build system for
 installing Ruby gems.
