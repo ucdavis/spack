@@ -150,3 +150,46 @@ def test_view_no_dir_symlinks(mock_packages, tmp_path: pathlib.Path):
     # File should be a symlink.
     ah_path = os.path.join(include_dir, "a.h")
     assert os.path.islink(ah_path)
+
+
+def test_view_ignores_cvmfs_catalog_files(mock_packages, tmp_path: pathlib.Path):
+    """CVMFS catalog markers are byte-identical in every prefix, so projecting them into a view
+    makes any two specs sharing a directory collide on them. They must be skipped instead."""
+    view_dir = str(tmp_path / "view")
+    os.mkdir(view_dir)
+
+    layout = DirectoryLayout(view_dir)
+    view = SimpleFilesystemView(view_dir, layout)
+
+    a = Spec("pkg-a")
+    b = Spec("pkg-b")
+    a.set_prefix(str(tmp_path / "a"))
+    b.set_prefix(str(tmp_path / "b"))
+    a._mark_concrete()
+    b._mark_concrete()
+
+    FsTree(
+        tmp_path,
+        {
+            "a/.spack": FsTree.dir(),
+            "b/.spack": FsTree.dir(),
+            # markers at the prefix root ...
+            "a/.cvmfscatalog": FsTree.file(),
+            "b/.cvmfscatalog": FsTree.file(),
+            # ... and nested in a dir both specs contribute to, which would be a fatal file
+            # conflict if they were projected.
+            "a/lib/.cvmfscatalog": FsTree.file(),
+            "b/lib/.cvmfscatalog": FsTree.file(),
+            "a/lib/liba.so": FsTree.file(),
+            "b/lib/libb.so": FsTree.file(),
+        },
+    )
+
+    view.add_specs(a, b)
+
+    assert not os.path.lexists(os.path.join(view_dir, ".cvmfscatalog"))
+    assert not os.path.lexists(os.path.join(view_dir, "lib", ".cvmfscatalog"))
+
+    # The rest of the merge is unaffected.
+    assert os.path.islink(os.path.join(view_dir, "lib", "liba.so"))
+    assert os.path.islink(os.path.join(view_dir, "lib", "libb.so"))

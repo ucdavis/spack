@@ -708,9 +708,12 @@ class SimpleFilesystemView(FilesystemView):
 
         self._sanity_check_view_projection(specs)
 
-        # Ignore spack meta data folder.
+        # Ignore spack meta data folder and CVMFS catalog markers.
         def skip_list(file):
-            return os.path.basename(file) == spack.store.STORE.layout.metadata_dir
+            return os.path.basename(file) in (
+                spack.store.STORE.layout.metadata_dir,
+                spack.directory_layout.cvmfs_catalog_file,
+            )
 
         # Determine if the root is on a case-insensitive filesystem
         normalize_paths = is_folder_on_case_insensitive_filesystem(self._root)

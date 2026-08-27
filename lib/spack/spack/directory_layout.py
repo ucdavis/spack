@@ -23,6 +23,12 @@ default_projections = {
     "all": "{architecture.platform}-{architecture.target}/{name}-{version}-{hash}"
 }
 
+#: HPCCF: empty marker files CVMFS tooling drops into directories to start a nested catalog.
+#: They are identical everywhere, so projecting them into a view makes any two specs sharing a
+#: projection collide, and a catalog boundary inside a view has no meaning. Filtered from all
+#: view merges.
+cvmfs_catalog_file = ".cvmfscatalog"
+
 
 def _check_concrete(spec: "spack.spec.Spec") -> None:
     """If the spec is not concrete, raise a ValueError"""
@@ -119,8 +125,11 @@ class DirectoryLayout:
         self.manifest_file_name = "install_manifest.json"
 
     @property
-    def hidden_file_regexes(self) -> Tuple[str]:
-        return ("^{0}$".format(re.escape(self.metadata_dir)),)
+    def hidden_file_regexes(self) -> Tuple[str, ...]:
+        return (
+            "^{0}$".format(re.escape(self.metadata_dir)),
+            "(^|{0}){1}$".format(re.escape(os.sep), re.escape(cvmfs_catalog_file)),
+        )
 
     def relative_path_for_spec(self, spec: "spack.spec.Spec") -> str:
         _check_concrete(spec)

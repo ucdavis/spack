@@ -10,9 +10,10 @@ import pytest
 
 import spack.concretize
 import spack.main
+import spack.store
 import spack.util.spack_yaml as s_yaml
 from spack.installer import PackageInstaller
-from spack.llnl.util.filesystem import _windows_can_symlink
+from spack.llnl.util.filesystem import _windows_can_symlink, touch
 from spack.main import SpackCommand
 
 extensions = SpackCommand("extensions")
@@ -241,3 +242,23 @@ def test_view_files_not_ignored(
 
     view("remove", viewpath, "view-not-ignored")
     pkg.assert_not_installed(prefix_in_view)
+
+
+@pytest.mark.parametrize("cmd", ["symlink", "copy"])
+def test_view_ignores_cvmfs_catalog_files(
+    tmp_path: pathlib.Path, mock_packages, mock_archive, mock_fetch, install_mockery, cmd
+):
+    """`spack view` must not project CVMFS catalog markers out of a prefix."""
+    install("--fake", "libdwarf")
+    spec = spack.store.STORE.db.query_one("libdwarf")
+
+    # Plant markers at the prefix root and in a nested directory.
+    touch(os.path.join(spec.prefix, ".cvmfscatalog"))
+    touch(os.path.join(spec.prefix, "bin", ".cvmfscatalog"))
+
+    view_dir = tmp_path / f"view_{cmd}"
+    view(cmd, str(view_dir), "libdwarf")
+
+    # The package is in the view, but its catalog markers are not.
+    assert (view_dir / "bin" / "libdwarf").exists()
+    assert not list(view_dir.rglob(".cvmfscatalog"))
